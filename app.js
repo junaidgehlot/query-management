@@ -7,6 +7,7 @@ const authRouter = require('./routes/auth');
 const userRouter = require('./routes/user');
 
 const connectDB = require('./db/connect');
+const authenticate = require('./middleware/authentication');
 
 app.use(express.json());
 
@@ -15,7 +16,7 @@ const errorMiddlewareHandler = require('./middleware/error-handler');
 
 // Router
 app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/user', userRouter);
+app.use('/api/v1/user', authenticate, userRouter);
 
 // error handlers
 app.use(notFoundMiddleware);
@@ -27,7 +28,7 @@ const start = async () => {
         await connectDB(process.env.MONGO_URI)
         app.listen(PORT, () => {
             console.log(`listening on port ${PORT}`);
-          });
+        });
     } catch (error) {
         console.log(error);
     }

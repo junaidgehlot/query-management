@@ -1,25 +1,75 @@
-const createUser = (req, res) => {
-    res.send('Create a user');
+const User = require('../models/user');
+const { BadRequestError, NotFoundError } = require('../errors');
+const { StatusCodes } = require('http-status-codes');
+
+const createUser = async (req, res) => {
+    const { name, email, role } = req.body;
+    if (!name || !email || !role) {
+        return new BadRequestError('Please provide name, email and password');
+    }
+
+    const user = await User.create({ name, email, role });
+    res.status(StatusCodes.OK).json(
+        {
+            message: `User ${name} successfully created`,
+            data: user
+        });
 }
 
-const getAllUsers = (req, res) => {
-    res.send('get all users');
+const getAllUsers = async (req, res) => {
+    const users = await User.find({});
+    res.status(StatusCodes.OK).json(
+        {
+            message: `Users successfully retrieved`,
+            data: users,
+            count: users.length
+        });
 }
 
-const getUser = (req, res) => {
-    res.send('get a user');
+const getUser = async (req, res) => {
+    const { id } = req.params;
+    const user = await User.find({ _id: id });
+    if (!user) {
+        return new NotFoundError('No user found');
+    }
+    res.status(StatusCodes.OK).json(
+        {
+            message: `Users successfully retrieved`,
+            data: user
+        });
 }
 
-const updateUser = (req, res) => {
-    res.send('Update a user');
+const updateUser = async (req, res) => {
+    const { params: {id}, body: {name, email, role}, user: {userId} } = req;
+    if (!name || !email || !role) {
+        return new BadRequestError('Please provide name, email and password');
+    }
+    const user = await User.findOneAndUpdate({ _id: id }, req.body, { new: true, runValidators: true });
+    if (!user) {
+        return new NotFoundError('No user to update');
+    }
+    res.status(StatusCodes.OK).json(
+        {
+            message: `User successfully updated`,
+            data: user
+        });
 }
 
-const deleteUser = (req, res) => {
-    res.send('Delete a user');
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    const user = await User.findOneAndDelete({ _id: id })
+    if(!user){
+        return new NotFoundError('No user to delete');
+    }
+    res.status(StatusCodes.OK).json(
+        {
+            message: `User successfully deleted`
+        });
 }
+
 
 module.exports = {
-    createUser, 
+    createUser,
     getAllUsers,
     getUser,
     updateUser,
