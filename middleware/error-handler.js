@@ -1,7 +1,7 @@
 const { StatusCodes } = require('http-status-codes');
 
 
-const errorMiddlewareHandler = (err, req, res, nex) => {
+const errorMiddlewareHandler = (err, req, res, next) => {
     const customErr = {
         statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
         msg: err.message || 'Something went wrong try again later'

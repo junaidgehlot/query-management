@@ -3,12 +3,13 @@ const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createUser = async (req, res) => {
-    const { name, email, role } = req.body;
+    const { body: { name, email, role }, user: { userId } } = req;
+    console.log(req.user);
     if (!name || !email || !role) {
-        return new BadRequestError('Please provide name, email and password');
+        return new NotFoundError('Please provide name, email and password');
     }
 
-    const user = await User.create({ name, email, role });
+    const user = await User.create({ name, email, role, createdBy: userId });
     res.status(StatusCodes.OK).json(
         {
             message: `User ${name} successfully created`,
@@ -17,7 +18,9 @@ const createUser = async (req, res) => {
 }
 
 const getAllUsers = async (req, res) => {
-    const users = await User.find({});
+    const { userId } = req.user;
+    console.log(req.user);
+    const users = await User.find({ createdBy: userId });
     res.status(StatusCodes.OK).json(
         {
             message: `Users successfully retrieved`,
@@ -27,10 +30,10 @@ const getAllUsers = async (req, res) => {
 }
 
 const getUser = async (req, res) => {
-    const { id } = req.params;
-    const user = await User.find({ _id: id });
+    const { params: { id }, user: { userId } } = req;
+    const user = await User.find({ _id: id, createdBy: userId });
     if (!user) {
-        return new NotFoundError('No user found');
+        throw new NotFoundError('No user found');
     }
     res.status(StatusCodes.OK).json(
         {
@@ -40,26 +43,27 @@ const getUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    const { params: {id}, body: {name, email, role}, user: {userId} } = req;
-    if (!name || !email || !role) {
-        return new BadRequestError('Please provide name, email and password');
+    const { params: { id },body:{name, email, role}, user: { userId } } = req;
+    if (!name && !email && !role) {
+        throw new BadRequestError('Please provide name, email and password');
     }
-    const user = await User.findOneAndUpdate({ _id: id }, req.body, { new: true, runValidators: true });
+    console.log(req.body)
+    const user = await User.findOneAndUpdate({ _id: id, createdBy: userId }, req.body, { new: true, runValidators: true });
     if (!user) {
-        return new NotFoundError('No user to update');
+        throw new NotFoundError('No user to update');
     }
     res.status(StatusCodes.OK).json(
         {
             message: `User successfully updated`,
-            data: user
+            // data: user
         });
 }
 
 const deleteUser = async (req, res) => {
-    const { id } = req.params;
-    const user = await User.findOneAndDelete({ _id: id })
-    if(!user){
-        return new NotFoundError('No user to delete');
+    const { params: { id }, user: { userId } } = req;
+    const user = await User.findOneAndDelete({ _id: id, createdBy: userId })
+    if (!user) {
+        throw new NotFoundError('No user to delete');
     }
     res.status(StatusCodes.OK).json(
         {

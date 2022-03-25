@@ -13,7 +13,7 @@ const authorize = async (req, res, next) => {
     try {
         const payload = jwt.verify(token, process.env.JWT_KEY);
         // @ts-ignore
-        req.user = { userId: payload.userId, name: payload.name }
+        req.user = { userId: payload.userID, name: payload.name }
         next();
     } catch (error) {
         throw new UnauthenticatedError('You are not loggedIn');
