@@ -1,6 +1,5 @@
-const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
-var jwt = require('jsonwebtoken');
+const { authMethods} = require('../db/db-methods');
 
 const AdminSchema = new mongoose.Schema({
     name: {
@@ -29,18 +28,8 @@ const AdminSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// @ts-ignore
-AdminSchema.pre('save', async function () {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-});
 
-AdminSchema.methods.createJWT = function () {
-    return jwt.sign({ userID: this._id, name: this.name }, process.env.JWT_KEY, { expiresIn: process.env.JWT_EXPIRY });
-}
+authMethods(AdminSchema);
 
-AdminSchema.methods.checkPassword = async function (userpassword) {
-    return await bcrypt.compare(userpassword, this.password);
-}
 
 module.exports = mongoose.model('Admin', AdminSchema);

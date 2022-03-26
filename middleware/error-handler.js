@@ -6,7 +6,6 @@ const errorMiddlewareHandler = (err, req, res, next) => {
         statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
         msg: err.message || 'Something went wrong try again later'
     }
-    console.log(err);
 
     if (err.name && err.name === 'ValidationError') {
         customErr.msg = Object.values(err.errors).map((item) => item.message).join(',');

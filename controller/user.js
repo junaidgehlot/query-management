@@ -1,14 +1,20 @@
 const User = require('../models/user');
+const Admin = require('../models/admin');
 const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createUser = async (req, res) => {
-    const { body: { name, email, role }, user: { userId } } = req;
-    console.log(req.user);
-    if (!name || !email || !role) {
-        return new NotFoundError('Please provide name, email and password');
+    const { body: { name, email, role }, user: { userId, role: userRole } } = req;
+    if(userRole === 'AGENT'){
+        throw new BadRequestError('Agents are not allowed to create a user');
     }
-
+    if (!name || !email || !role) {
+        throw new NotFoundError('Please provide name, email and password');
+    }
+    const admin = await Admin.findOne({ email });
+    if(admin){
+        throw new BadRequestError('Duplicate value entered for email field, please choose another value');
+    }
     const user = await User.create({ name, email, role, createdBy: userId });
     res.status(StatusCodes.OK).json(
         {
@@ -19,7 +25,6 @@ const createUser = async (req, res) => {
 
 const getAllUsers = async (req, res) => {
     const { userId } = req.user;
-    console.log(req.user);
     const users = await User.find({ createdBy: userId });
     res.status(StatusCodes.OK).json(
         {
@@ -31,7 +36,7 @@ const getAllUsers = async (req, res) => {
 
 const getUser = async (req, res) => {
     const { params: { id }, user: { userId } } = req;
-    const user = await User.find({ _id: id, createdBy: userId });
+    const user = await User.findOne({ _id: id, createdBy: userId });
     if (!user) {
         throw new NotFoundError('No user found');
     }
@@ -47,7 +52,6 @@ const updateUser = async (req, res) => {
     if (!name && !email && !role) {
         throw new BadRequestError('Please provide name, email and password');
     }
-    console.log(req.body)
     const user = await User.findOneAndUpdate({ _id: id, createdBy: userId }, req.body, { new: true, runValidators: true });
     if (!user) {
         throw new NotFoundError('No user to update');
