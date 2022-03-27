@@ -8,8 +8,10 @@ const errorMiddlewareHandler = (err, req, res, next) => {
     }
 
     if (err.name && err.name === 'ValidationError') {
+        console.log(Object.values(err.errors).map((item) => item.message).join(','));
         customErr.msg = Object.values(err.errors).map((item) => item.message).join(',');
         customErr.statusCode = StatusCodes.BAD_REQUEST;
+        
     }
 
     if (err.code && err.code === 11000) {
@@ -21,8 +23,8 @@ const errorMiddlewareHandler = (err, req, res, next) => {
         customErr.msg = `No Item found for id: ${err.value}`
         customErr.statusCode = StatusCodes.NOT_FOUND;
     }
-    // return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
-    return res.status(customErr.statusCode).json({ msg: customErr.msg })
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
+    // return res.status(customErr.statusCode).json({ msg: customErr.msg })
 }
 
 module.exports = errorMiddlewareHandler;

@@ -5,7 +5,7 @@ const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createTeam = async (req, res) => {
-    const { user: { id, role }, body: { name, supervisor } } = req;
+    const { user: { id, role }, body: { name, supervisor, teamleader, agent } } = req;
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can create a team');
     }
@@ -28,10 +28,11 @@ const getAllTeams = async (req, res) => {
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can see this information');
     }
+
     const teams = await Team.find({});
     res.status(StatusCodes.OK).json(
         {
-            message: `Users successfully retrieved`,
+            message: `Teams successfully retrieved`,
             data: teams,
             count: teams.length
         });
@@ -44,13 +45,14 @@ const getTeam = async (req, res) => {
         throw new BadRequestError('Only Admin and supervisor can see this information');
     }
 
+
     const team = await Team.findOne({ _id: id });
     if (!team) {
         throw new NotFoundError('No user found');
     }
     res.status(StatusCodes.OK).json(
         {
-            message: `Users successfully retrieved`,
+            message: `Teams successfully retrieved`,
             data: team
         });
 }
@@ -87,6 +89,8 @@ const deleteTeam = async (req, res) => {
             message: `Team successfully deleted`
         });
 }
+
+
 
 module.exports = {
     createTeam,

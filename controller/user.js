@@ -1,18 +1,20 @@
 const User = require('../models/user');
 const Admin = require('../models/admin');
+const Team = require('../models/team');
+
 const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createUser = async (req, res) => {
     const { body: { name, email, role }, user: { userId, role: userRole } } = req;
-    if(userRole === 'AGENT'){
+    if (userRole === 'AGENT') {
         throw new BadRequestError('Agents are not allowed to create a user');
     }
     if (!name || !email || !role) {
         throw new NotFoundError('Please provide name, email and password');
     }
     const admin = await Admin.findOne({ email });
-    if(admin){
+    if (admin) {
         throw new BadRequestError('Duplicate value entered for email field, please choose another value');
     }
     const user = await User.create({ name, email, role, createdBy: userId });
@@ -48,7 +50,7 @@ const getUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    const { params: { id },body:{name, email, role}, user: { userId } } = req;
+    const { params: { id }, body: { name, email, role }, user: { userId } } = req;
     if (!name && !email && !role) {
         throw new BadRequestError('Please provide name, email and password');
     }
