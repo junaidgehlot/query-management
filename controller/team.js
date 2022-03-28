@@ -24,12 +24,12 @@ const createTeam = async (req, res) => {
 }
 
 const getAllTeams = async (req, res) => {
-    const { user: { role } } = req;
+    const { user: { role, admin } } = req;
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can see this information');
     }
 
-    const teams = await Team.find({});
+    const teams = await Team.find({ admin });
     res.status(StatusCodes.OK).json(
         {
             message: `Teams successfully retrieved`,
@@ -40,13 +40,12 @@ const getAllTeams = async (req, res) => {
 }
 
 const getTeam = async (req, res) => {
-    const { user: { role }, params: { id } } = req;
+    const { user: { role, admin }, params: { id } } = req;
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can see this information');
     }
 
-
-    const team = await Team.findOne({ _id: id });
+    const team = await Team.findOne({ _id: id, admin });
     if (!team) {
         throw new NotFoundError('No user found');
     }
@@ -58,14 +57,14 @@ const getTeam = async (req, res) => {
 }
 
 const updateTeam = async (req, res) => {
-    const { user: { role }, params: { id }, body: { supervisor } } = req;
+    const { user: { role, admin }, params: { id }, body: { supervisor, teamleader, agent } } = req;
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can update a team');
     }
     if (!supervisor) {
         throw new BadRequestError('Team without supervisor is not allowed');
     }
-    const team = await Team.findOneAndUpdate({ _id: id });
+    const team = await Team.findOneAndUpdate({ _id: id, admin });
     if (!team) {
         throw new NotFoundError('No user found');
     }
@@ -76,11 +75,11 @@ const updateTeam = async (req, res) => {
 }
 
 const deleteTeam = async (req, res) => {
-    const { user: { role }, params: { id } } = req;
+    const { user: { role, admin }, params: { id } } = req;
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can delete a team');
     }
-    const user = await Team.findOneAndDelete({ _id: id })
+    const user = await Team.findOneAndDelete({ _id: id, admin })
     if (!user) {
         throw new NotFoundError('No user to delete');
     }

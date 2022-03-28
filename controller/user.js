@@ -6,28 +6,34 @@ const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createUser = async (req, res) => {
-    const { body: { name, email, role }, user: { userId, role: userRole } } = req;
-    if (userRole === 'AGENT') {
-        throw new BadRequestError('Agents are not allowed to create a user');
+    const { body: { name, email, role }, user: { _id: userId, role: userRole } } = req;
+    const userAdmin = userRole !== 'ADMIN' ? req.user.admin : null;
+    if (userRole === role) {
+        throw new BadRequestError('You cannot create user of same role');
+    }
+    if (userRole === 'AGENT' || userRole === 'TEAMLEADER') {
+        throw new BadRequestError('Agents or teamleader are not allowed to create a user');
     }
     if (!name || !email || !role) {
         throw new NotFoundError('Please provide name, email and password');
     }
     const admin = await Admin.findOne({ email });
+
     if (admin) {
         throw new BadRequestError('Duplicate value entered for email field, please choose another value');
     }
-    const user = await User.create({ name, email, role, createdBy: userId });
+    const user = await User.create({ name, email, role, createdBy: userId, admin: userAdmin || userId });
     res.status(StatusCodes.OK).json(
         {
             message: `User ${name} successfully created`,
-            data: user
+            data: user,
         });
 }
 
 const getAllUsers = async (req, res) => {
-    const { userId } = req.user;
-    const users = await User.find({ createdBy: userId });
+    const { _id: userId, role } = req.user;
+    const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
+    const users = await User.find(queryObject);
     res.status(StatusCodes.OK).json(
         {
             message: `Users successfully retrieved`,
@@ -37,37 +43,43 @@ const getAllUsers = async (req, res) => {
 }
 
 const getUser = async (req, res) => {
-    const { params: { id }, user: { userId } } = req;
-    const user = await User.findOne({ _id: id, createdBy: userId });
+    const { params: { id }, user: { _id: userId, role } } = req;
+    const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
+    const user = await User.findOne({ _id: id, ...queryObject });
     if (!user) {
         throw new NotFoundError('No user found');
     }
     res.status(StatusCodes.OK).json(
         {
             message: `Users successfully retrieved`,
-            data: user
+            data: user,
         });
 }
 
 const updateUser = async (req, res) => {
-    const { params: { id }, body: { name, email, role }, user: { userId } } = req;
+    const { params: { id }, body: { name, email, role }, user: { _id: userId, role: userRole } } = req;
     if (!name && !email && !role) {
-        throw new BadRequestError('Please provide name, email and password');
+        throw new BadRequestError('Please provide name, email, role or password');
     }
-    const user = await User.findOneAndUpdate({ _id: id, createdBy: userId }, req.body, { new: true, runValidators: true });
+    if (userRole === role) {
+        throw new BadRequestError('You cannot update user of same role');
+    }
+    const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
+    const user = await User.findOneAndUpdate({ _id: id, ...queryObject }, req.body, { new: true, runValidators: true });
     if (!user) {
         throw new NotFoundError('No user to update');
     }
     res.status(StatusCodes.OK).json(
         {
             message: `User successfully updated`,
-            // data: user
+            data: user
         });
 }
 
 const deleteUser = async (req, res) => {
-    const { params: { id }, user: { userId } } = req;
-    const user = await User.findOneAndDelete({ _id: id, createdBy: userId })
+    const { params: { id }, user: { _id: userId, role } } = req;
+    const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
+    const user = await User.findOneAndDelete({ _id: id, ...queryObject});
     if (!user) {
         throw new NotFoundError('No user to delete');
     }

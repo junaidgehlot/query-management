@@ -19,7 +19,7 @@ const UserSchema = new mongoose.Schema({
         type: String,
         minLength: 6,
         match: [/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).+$/, 'Password should be alphanumeric with min one uppercase, lowercase and, at least one special character']
-    },   
+    },
     role: {
         type: String,
         ENUM: ['SUPERVISOR', 'TEAMLEADER', 'AGENT'],
@@ -29,9 +29,14 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Types.ObjectId,
         required: [true, 'Please provide createdBy']
     },
-    team:{
+    team: {
         type: mongoose.Types.ObjectId,
-        ref: 'Team', 
+        ref: 'Team',
+    },
+    admin: {
+        type: mongoose.Types.ObjectId,
+        ref: 'Admin',
+        required: [true, 'Please provide admin']
     }
 }, {
     timestamps: true,
@@ -40,7 +45,7 @@ const UserSchema = new mongoose.Schema({
 
 
 UserSchema.virtual('fromAdmin', {
-    ref: 'Admin', 
+    ref: 'Admin',
     localField: 'createdBy',
     foreignField: '_id',
     justOne: true
@@ -48,9 +53,9 @@ UserSchema.virtual('fromAdmin', {
 
 
 UserSchema.virtual('fromUser', {
-    ref: 'User', 
-    localField: 'createdBy', 
-    foreignField: '_id', 
+    ref: 'User',
+    localField: 'createdBy',
+    foreignField: '_id',
     justOne: true
 });
 

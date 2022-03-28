@@ -23,8 +23,8 @@ const errorMiddlewareHandler = (err, req, res, next) => {
         customErr.msg = `No Item found for id: ${err.value}`
         customErr.statusCode = StatusCodes.NOT_FOUND;
     }
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
-    // return res.status(customErr.statusCode).json({ msg: customErr.msg })
+    // return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ err })
+    return res.status(customErr.statusCode).json({ msg: customErr.msg })
 }
 
 module.exports = errorMiddlewareHandler;
