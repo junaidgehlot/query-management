@@ -1,24 +1,46 @@
 const mongoose = require('mongoose');
+const User = require('./user');
+
+const userValidator = userRole => async (v) => {
+    const user = await User.findOne({ _id: v });
+    return user.role === userRole;
+}
+
 
 const teamSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: [true, 'Please provide a name']
+        required: [true, 'Please provide a name'],
+        unique: true,
     },
     supervisor: {
         type: mongoose.Types.ObjectId,
         ref: 'User',
-        required:[true, 'Team should have a Supervisor']
+        unique: true,
+        required: [true, 'Team should have a Supervisor'],
+        validate: [{
+            validator: userValidator('SUPERVISER'),
+            message: 'User should be a supervser'
+        }]
     },
-    teamleader:{
+    teamleader: {
         type: mongoose.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        unique: true,
+        validate: [{
+            validator: userValidator('TEAMLEADER'),
+            message: 'User should be a teamleader'
+        }]
     },
-    agent: [{
-        type: mongoose.Types.ObjectId,
-        ref: 'User'
-    }]
+    agents: {
+        type: [{
+            type: mongoose.Types.ObjectId,
+            ref: 'User',
+        }],
+        unique: true,
+    }
 });
+;
 
 
 module.exports = mongoose.model('Team', teamSchema);

@@ -5,7 +5,8 @@ const { BadRequestError, NotFoundError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const createTeam = async (req, res) => {
-    const { user: { id, role }, body: { name, supervisor, teamleader, agent } } = req;
+    const { user: { id, role }, body: { name, supervisor, teamleader, agents } } = req;
+
     if (role === 'AGENT' || role === 'TEAMLEADER') {
         throw new BadRequestError('Only Admin and supervisor can create a team');
     }
@@ -13,13 +14,16 @@ const createTeam = async (req, res) => {
     if (!supervisor) {
         throw new BadRequestError('Team without supervisor is not allowed');
     }
-    const user = await User.find({ _id: supervisor });
-    if (!user) {
-        throw new NotFoundError('Selected supervisor does not exist');
+
+    if (agents && agents.length === 0) {
+        throw new BadRequestError('Add atleast one agent to the team');
     }
-    await Team.create(req.body);
+    const team = await Team.create({ name, supervisor, teamleader, agents, admin: id });
+    const users =  await User.updateMany({ "_id": { $in: [supervisor, teamleader, ...agents] } }, { team: team._id });
     res.status(StatusCodes.OK).json({
-        msg: `Team ${name} successfully created`
+        msg: `Team ${name} successfully created`,
+        data: team,
+        users
     })
 }
 

@@ -1,4 +1,3 @@
-const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const { authMethods } = require('../db/db-methods');
 

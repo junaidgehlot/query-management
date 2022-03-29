@@ -8,7 +8,6 @@ const errorMiddlewareHandler = (err, req, res, next) => {
     }
 
     if (err.name && err.name === 'ValidationError') {
-        console.log(Object.values(err.errors).map((item) => item.message).join(','));
         customErr.msg = Object.values(err.errors).map((item) => item.message).join(',');
         customErr.statusCode = StatusCodes.BAD_REQUEST;
         

@@ -23,7 +23,6 @@ const authorize = async (req, res, next) => {
         }
         req.user = user
         
-        console.log(payload);
         next();
     } catch (error) {
         throw new UnauthenticatedError('You are not loggedIn');
