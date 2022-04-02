@@ -3,7 +3,7 @@ const User = require('./user');
 
 const userValidator = userRole => async (v) => {
     const user = await User.findOne({ _id: v });
-    return user.role === userRole;
+    return user ? user?.role === userRole : false;
 }
 
 
@@ -20,7 +20,7 @@ const teamSchema = new mongoose.Schema({
         required: [true, 'Team should have a Supervisor'],
         validate: [{
             validator: userValidator('SUPERVISER'),
-            message: 'User should be a supervser'
+            message: 'User should be a superviser'
         }]
     },
     teamleader: {
