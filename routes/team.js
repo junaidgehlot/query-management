@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { authorizePermissions } = require('../middleware/authentication');
 const  {
     createTeam,
     getAllTeams,
@@ -9,7 +10,7 @@ const  {
 } = require('../controller/team');
 
 
-router.route('/').get(getAllTeams).post(createTeam);
-router.route('/:id').get(getTeam).patch(updateTeam).delete(deleteTeam);
+router.route('/').get(authorizePermissions('ADMIN', 'SUPERVISOR'), getAllTeams).post(authorizePermissions('ADMIN', 'SUPERVISOR'), createTeam);
+router.route('/:id').get(authorizePermissions('ADMIN', 'SUPERVISOR'),getTeam).patch(authorizePermissions('ADMIN', 'SUPERVISOR'), updateTeam).delete(authorizePermissions('ADMIN', 'SUPERVISOR'), deleteTeam);
 
 module.exports = router;

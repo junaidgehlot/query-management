@@ -16,11 +16,13 @@ const authMethods = function (customSchema) {
         return jwt.sign({ userID: this._id, name: this.name, role: this.role }, process.env.JWT_KEY, { expiresIn: process.env.JWT_EXPIRY });
     }
 
-    customSchema.methods.checkPassword = async function (userpassword) {
-        if(userpassword && this.password){
-            return await bcrypt.compare(userpassword, this.password);
+    customSchema.methods.comparePassword = async function (canditatePassword) {
+        let isMatch = false;
+        if(canditatePassword && this.password){
+             isMatch = await bcrypt.compare(canditatePassword, this.password);
         }
-    }
+        return isMatch;
+      };
 }
 
 

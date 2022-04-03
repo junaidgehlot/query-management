@@ -22,5 +22,6 @@
   ],
   "typeAcquisition": {
     "enable": true
-  }
+  },
+  "esModuleInterop": true
 }

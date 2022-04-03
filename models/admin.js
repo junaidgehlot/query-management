@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { authMethods} = require('../db/db-methods');
+const { authMethods } = require('../db/db-methods');
 
 const AdminSchema = new mongoose.Schema({
     name: {
@@ -27,7 +27,6 @@ const AdminSchema = new mongoose.Schema({
         default: 'ADMIN'
     }
 }, { timestamps: true });
-
 
 authMethods(AdminSchema);
 

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { authMethods } = require('../db/db-methods');
 
+
 const UserSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -42,6 +43,8 @@ const UserSchema = new mongoose.Schema({
     toJSON: { virtuals: true }
 });
 
+authMethods(UserSchema);
+
 
 UserSchema.virtual('fromAdmin', {
     ref: 'Admin',
@@ -59,6 +62,6 @@ UserSchema.virtual('fromUser', {
 });
 
 
-authMethods(UserSchema);
+
 
 module.exports = mongoose.model('User', UserSchema);

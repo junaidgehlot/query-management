@@ -6,9 +6,6 @@ const { StatusCodes } = require('http-status-codes');
 
 const createTeam = async (req, res) => {
     const { user: { id, role }, body: { name, supervisor, teamleader, agents } } = req;
-    if (role === 'AGENT' || role === 'TEAMLEADER') {
-        throw new BadRequestError('Only Admin and supervisor can create a team');
-    }
 
     if (!supervisor) {
         throw new BadRequestError('Team without supervisor is not allowed');
@@ -27,9 +24,6 @@ const createTeam = async (req, res) => {
 
 const getAllTeams = async (req, res) => {
     const { user: { role, admin } } = req;
-    if (role === 'AGENT' || role === 'TEAMLEADER') {
-        throw new BadRequestError('Only Admin and supervisor can see this information');
-    }
 
     const teams = await Team.find({ admin });
     res.status(StatusCodes.OK).json({
@@ -42,9 +36,6 @@ const getAllTeams = async (req, res) => {
 
 const getTeam = async (req, res) => {
     const { user: { role, admin }, params: { id } } = req;
-    if (role === 'AGENT' || role === 'TEAMLEADER') {
-        throw new BadRequestError('Only Admin and supervisor can see this information');
-    }
 
     const team = await Team.findOne({ _id: id, admin });
     if (!team) {
@@ -58,16 +49,11 @@ const getTeam = async (req, res) => {
 
 const updateTeam = async (req, res) => {
     const { user: { role, admin }, params: { id }, body: { supervisor, teamleader, agents } } = req;
-    if (role === 'AGENT' || role === 'TEAMLEADER') {
-        throw new BadRequestError('Only Admin and supervisor can update a team');
-    }
-    if (!supervisor) {
-        throw new BadRequestError('Team without supervisor is not allowed');
-    }
-    const team = await Team.findOneAndUpdate({ _id: id, admin, teamleader }, {$push: {'agents': ''}});
-    await User.updateMany({ "_id": { $in: [supervisor, teamleader, ...agents] } }, { team: team._id });
+    const team = await Team.findOneAndUpdate({ _id: id }, { admin, teamleader, $addToSet: { 'agents': agents } });
     if (!team) {
-        throw new NotFoundError('No user found');
+        throw new NotFoundError('No team found');
+    } else {
+        await User.updateMany({ "_id": { $in: [supervisor, teamleader, ...agents] } }, { team: team._id });
     }
     res.status(StatusCodes.OK).json({
         message: `Team successfully updated`
@@ -76,14 +62,12 @@ const updateTeam = async (req, res) => {
 
 const deleteTeam = async (req, res) => {
     const { user: { role, admin }, params: { id } } = req;
-    if (role === 'AGENT' || role === 'TEAMLEADER') {
-        throw new BadRequestError('Only Admin and supervisor can delete a team');
-    }
-    const team = await Team.findOneAndDelete({ _id: id, admin });
+    const team = await Team.findOne({ _id: id, admin });
     if (!team) {
         throw new NotFoundError('No team to delete');
     }
-    await User.updateMany({ "_id": { $in: [team.supervisor, team.teamleader, ...team.agents] } }, { $unset: {'team':''} });
+    await User.updateMany({ "_id": { $in: [team.supervisor, team.teamleader, ...team.agents] } }, { $unset: { 'team': '' } });
+    team.remove();
     res.status(StatusCodes.OK).json({
         message: `Team successfully deleted`,
         data: team

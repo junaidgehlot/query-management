@@ -11,9 +11,7 @@ const createUser = async (req, res) => {
     if (userRole === role) {
         throw new BadRequestError('You cannot create user of same role');
     }
-    if (userRole === 'AGENT' || userRole === 'TEAMLEADER') {
-        throw new BadRequestError('Agents or teamleader are not allowed to create a user');
-    }
+    
     if (!name || !email || !role) {
         throw new NotFoundError('Please provide name, email and password');
     }
@@ -57,7 +55,7 @@ const getUser = async (req, res) => {
 }
 
 const updateUser = async (req, res) => {
-    const { params: { id }, body: { name, email, role }, user: { _id: userId, role: userRole } } = req;
+    const { params: { id }, body: { name, email, role, team }, user: { _id: userId, role: userRole } } = req;
     if (!name && !email && !role) {
         throw new BadRequestError('Please provide name, email, role or password');
     }
@@ -65,24 +63,50 @@ const updateUser = async (req, res) => {
         throw new BadRequestError('You cannot update user of same role');
     }
     const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
+
     const user = await User.findOneAndUpdate({ _id: id, ...queryObject }, req.body, { new: true, runValidators: true });
     if (!user) {
         throw new NotFoundError('No user to update');
     }
-    res.status(StatusCodes.OK).json(
-        {
-            message: `User successfully updated`,
-            data: user
-        });
+
+    if (team !== user.team) {
+        const team = await Team.findOne({ _id: user.team });
+        if (user.role === 'SUPERVISOR') {
+            team.supervisor = user._id
+        } else if (user.role === 'TEAMLEADER') {
+            team.teamleader = user._id
+        } else {
+            if (team.agents.indexOf(user._id) >= 0) {
+                team.agents.push(user._id)
+            }
+        }
+        team.save();
+    }
+
+    res.status(StatusCodes.OK).json({
+        message: `User successfully updated`,
+        data: user
+    });
 }
 
 const deleteUser = async (req, res) => {
     const { params: { id }, user: { _id: userId, role } } = req;
     const queryObject = role === 'ADMIN' ? { admin: userId } : { createdBy: userId };
-    const user = await User.findOneAndDelete({ _id: id, ...queryObject});
+    const user = await User.findOne({ _id: id, ...queryObject });
     if (!user) {
         throw new NotFoundError('No user to delete');
     }
+    if (user.team) {
+        await Team.findOneAndUpdate({ _id: user.team },
+            user.role === 'AGENT' ? {
+                $pullAll: {
+                    agents: user._id,
+                }
+            } : {
+                $unset: user.role === 'SUPERVISOR' ? { 'supervisor': '' } : { 'teamleader': '' }
+            });
+    }
+    user.remove();
     res.status(StatusCodes.OK).json(
         {
             message: `User successfully deleted`

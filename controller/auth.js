@@ -1,6 +1,6 @@
 const Admin = require('../models/admin');
 const User = require('../models/user');
-const { BadRequestError, NotFoundError } = require('../errors');
+const { BadRequestError, NotFoundError, UnauthenticatedError } = require('../errors');
 const { StatusCodes } = require('http-status-codes');
 
 const register = async (req, res) => {
@@ -32,10 +32,11 @@ const login = async (req, res) => {
     }
 
     // check password
-    const isPasswordCorrect = user.checkPassword(password);
-    if(!isPasswordCorrect){
-        throw new NotFoundError(`Password Incorrect`);
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      throw new UnauthenticatedError('Invalid Credentials');
     }
+    console.log(isPasswordCorrect);
     const token = user.createJWT();
     res.status(StatusCodes.OK).json({ user: { name: user.name, role: user.role }, token });
 

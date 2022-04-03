@@ -8,7 +8,7 @@ const userRouter = require('./routes/user');
 const teamRouter = require('./routes/team');
 
 const connectDB = require('./db/connect');
-const authenticate = require('./middleware/authentication');
+const { authenticate } = require('./middleware/authentication');
 
 const notFoundMiddleware = require('./middleware/not-found');
 const errorMiddlewareHandler = require('./middleware/error-handler');
@@ -17,7 +17,7 @@ app.use(express.json());
 
 app.get('/', (req, res) => {
     res.send('<h1>Query Management tool</h1>');
-  });
+});
 
 // Router
 app.use('/api/v1/auth', authRouter);
