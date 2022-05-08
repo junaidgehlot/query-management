@@ -7,7 +7,6 @@ const { StatusCodes } = require('http-status-codes');
 
 const createUser = async (req, res) => {
     const { body: { name, email, role }, user: { _id: userId, role: userRole } } = req;
-    const userAdmin = userRole !== 'ADMIN' ? req.user.admin : null;
     if (userRole === role) {
         throw new BadRequestError('You cannot create user of same role');
     }
@@ -20,7 +19,7 @@ const createUser = async (req, res) => {
     if (admin) {
         throw new BadRequestError('Duplicate value entered for email field, please choose another value');
     }
-    const user = await User.create({ name, email, role, createdBy: userId, admin: userAdmin || userId });
+    const user = await User.create({ name, email, role, createdBy: userId, admin: userRole !== 'ADMIN' ? req.user.admin : null || userId });
     res.status(StatusCodes.OK).json(
         {
             message: `User ${name} successfully created`,

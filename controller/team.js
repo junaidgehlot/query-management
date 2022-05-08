@@ -35,7 +35,7 @@ const getAllTeams = async (req, res) => {
 }
 
 const getTeam = async (req, res) => {
-    const { user: { role, admin }, params: { id } } = req;
+    const { user: { admin }, params: { id } } = req;
 
     const team = await Team.findOne({ _id: id, admin });
     if (!team) {
@@ -48,7 +48,7 @@ const getTeam = async (req, res) => {
 }
 
 const updateTeam = async (req, res) => {
-    const { user: { role, admin }, params: { id }, body: { supervisor, teamleader, agents } } = req;
+    const { user: { admin }, params: { id }, body: { supervisor, teamleader, agents } } = req;
     const team = await Team.findOneAndUpdate({ _id: id }, { admin, teamleader, $addToSet: { 'agents': agents } });
     if (!team) {
         throw new NotFoundError('No team found');
@@ -61,7 +61,7 @@ const updateTeam = async (req, res) => {
 }
 
 const deleteTeam = async (req, res) => {
-    const { user: { role, admin }, params: { id } } = req;
+    const { user: { admin }, params: { id } } = req;
     const team = await Team.findOne({ _id: id, admin });
     if (!team) {
         throw new NotFoundError('No team to delete');
