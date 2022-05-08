@@ -13,7 +13,7 @@ const authMethods = function (customSchema) {
     });
 
     customSchema.methods.createJWT = function () {
-        return jwt.sign({ userID: this._id, name: this.name, role: this.role }, process.env.JWT_KEY, { expiresIn: process.env.JWT_EXPIRY });
+        return jwt.sign({ userID: this._id, name: this.name, role: this.role }, process.env.JWT_KEY, { expiresIn: process.env.JWT_LIFETIME });
     }
 
     customSchema.methods.comparePassword = async function (canditatePassword) {
